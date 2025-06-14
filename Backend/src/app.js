@@ -1,8 +1,13 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+
+
 
 const app = express();
 const server = http.createServer(app); // Converts Express app into an HTTP server that also works with WebSockets.
@@ -25,6 +30,7 @@ const io = new Server(server, {
 let onlineUsers = {};
 
 io.on("connection", (socket) => { // socket mein object aaega
+  console.log('connection',socket.id)
   socket.on("user-connected", (email) => { // email mein jo frontend se jo bheja hain vo jaiga
     if (!email) return;
     onlineUsers[email] = socket.id;

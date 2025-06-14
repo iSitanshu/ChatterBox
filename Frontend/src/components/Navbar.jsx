@@ -7,36 +7,10 @@ import { GoogleLogin, googleLogout } from '@react-oauth/google'
 import axios from 'axios'
   
 const Navbar = () => {
-  const [profile, setProfile] = useState([])
   const dispatch = useDispatch()
   const navigate = useNavigate()
   // Assuming user info is stored as an array in state.user.user
   const user = useSelector((state) => state.user.user) || [];
-
-  useEffect(
-          () => {
-              if (user) {
-                  axios
-                      .get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${user.access_token}`, {
-                          headers: {
-                              Authorization: `Bearer ${user.access_token}`,
-                              Accept: 'application/json'
-                          }
-                      })
-                      .then((res) => {
-                          setProfile(res.data);
-                      })
-                      .catch((err) => console.log(err));
-              }
-          },
-          [ user ]
-      );
-  
-      // log out function to log the user out of google and set the profile array to null
-      const logOut = () => {
-          googleLogout();
-          setProfile(null);
-      };
 
   return (
     <div className="flex items-center justify-between mb-12 p-6  bg-gradient-to-tr from-gray-900 via-black to-gray-800">

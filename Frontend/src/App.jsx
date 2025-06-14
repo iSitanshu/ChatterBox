@@ -17,7 +17,7 @@ function App() {
   const user = useSelector((state) => state.user.user)
 
   return (
-    <>
+    <div>
       {user && user.length !== 0 && <SocketComponent />}
       {status && <LoginPopup />}
       {checkCreate && <Create />}
@@ -28,7 +28,7 @@ function App() {
         <Route path='/profile' element={<ProfileUser />} />
         <Route path='/user/channel' element={<Channel />} />
       </Routes>
-    </>
+    </div>
   )
 }
 

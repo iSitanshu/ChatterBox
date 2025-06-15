@@ -29,13 +29,13 @@ ChatterBox is a blazing fast real-time chat app with live presence, private mess
 ## 🖼️ Screenshots
 
 ### 🔹 Home Page
-![Home](./assets/75005cdb-7a57-46ea-99cb-a9ca113917e6.png)
+![Home](./Github/Home.png)
 
-### 🔹 Chat Interface
-![Chat](./assets/15b9e860-a080-4357-8358-52a3a5cfe1ef.png)
+### 🔹 Room Interface
+![Room](./Github/Room.png)
 
-### 🔹 Landing Page
-![Landing](./assets/391b9928-2c39-407c-bad4-afd36dad50f8.png)
+### 🔹 Chat Page
+![Chat](./Github/Chat.png)
 
 ---
 

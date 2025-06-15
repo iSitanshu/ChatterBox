@@ -33,7 +33,6 @@ const Create = () => {
          dispatch(addRoom(response.data.data.room))
          dispatch(changeCreateRoom())
          alert('Room created successfully!')
-        //  navigate('/channel')
        } catch (error) {
          console.error('Error creating post:', error);
        }

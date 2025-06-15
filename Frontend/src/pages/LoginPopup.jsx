@@ -32,6 +32,7 @@ const LoginPopup = () => {
           ? "/api/v1/user/register"
           : "/api/v1/user/login";
       const response = await axios.post(endpoint, userregister);
+      console.log("login routes -",endpoint)
       dispatch(addUser(response.data.data.user));
       if (response.data && response.data.data && response.data.data.user) {
         dispatch(changeStatus());

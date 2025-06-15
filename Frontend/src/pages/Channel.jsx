@@ -1,27 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar";
-import { Send, Paperclip, Smile, Mic, Menu } from "lucide-react";
+import { Send, PlusCircle, Paperclip, Smile, Mic, Menu } from "lucide-react";
 import axios from "axios";
 import socket from "../socket/socket.js";
 
 const Channel = () => {
   const room = useSelector((state) => state.room.room);
+  const roomId = useSelector((state) => state.room.roomID);
   const user = useSelector((state) => state.user.user);
   const onlineUsers = useSelector((state) => state.user.online);
-
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const [usercount, setUsercount] = useState(null);
   const [totalMember, setTotalMember] = useState([]);
   const [onlineMembers, setOnlineMembers] = useState([]);
-  const [roomId, setRoomId] = useState("");
 
-  // State to toggle sidebar visibility on mobile/tablet
+  // Mobile sidebar toggle: false by default on small screens
   const [showSidebar, setShowSidebar] = useState(false);
 
-  // Fetch room info and set details (ensure your backend returns data._id as roomId)
+  // Fetch room info
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
@@ -36,7 +35,6 @@ const Channel = () => {
           onlineUsers.includes(username)
         );
         setOnlineMembers(onlineMembersUsernames);
-        setRoomId(data._id);
       } catch (error) {
         console.error("Failed to fetch room info:", error);
       }
@@ -47,34 +45,45 @@ const Channel = () => {
     }
   }, [room, onlineUsers]);
 
-  // Fetch previous messages (not shown fully here)
-  useEffect(() => {
-    // your fetchPreviousMessages logic, for example:
-    const fetchPreviousMessages = async () => {
-      try {
-        const response = await axios.post("/api/v1/message/previous_message", {
-          roomID: roomId,
-        });
-        const messagesData = response.data.data;
-        const formattedMessages = messagesData.map((msg, idx) => ({
-          id: msg._id || idx + 1,
-          user: msg.senderName,
-          text: msg.content,
-          time: new Date(msg.time).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
-        setMessages(formattedMessages);
-      } catch (error) {
-        console.error("Failed to fetch previous messages:", error);
-      }
-    };
+  // Fetch previous messages
+  const fetchPreviousMessages = async () => {
+    try {
+      const response = await axios.post("/api/v1/message/previous_message", {
+        roomID: roomId,
+      });
+      const messagesData = response.data.data;
+      const formattedMessages = messagesData.map((msg, idx) => ({
+        id: msg._id || idx + 1,
+        user: msg.senderName,
+        text: msg.content,
+        time: new Date(msg.time).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error("Failed to fetch previous messages:", error);
+    }
+  };
 
+  useEffect(() => {
     if (roomId) {
       fetchPreviousMessages();
     }
   }, [roomId]);
+
+  // Listen for socket trigger to reload messages
+  useEffect(() => {
+    socket.on("triggerPreviousMess", () => {
+      fetchPreviousMessages();
+    });
+  }, []);
+
+  // Auto scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -104,24 +113,24 @@ const Channel = () => {
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
       <Navbar />
 
-      {/* Mobile Header with Menu icon */}
-      <div className="md:hidden flex items-center p-2 bg-gray-800">
+      {/* Mobile Header: displays only on small screens */}
+      <div className="md:hidden flex items-center p-3 bg-gray-800">
         <button
           onClick={() => setShowSidebar(!showSidebar)}
           className="text-gray-400 hover:text-white focus:outline-none"
         >
           <Menu size={24} />
         </button>
-        <h1 className="ml-4 text-lg font-bold">
-          {room || "General Channel"}
-        </h1>
+        <h1 className="ml-4 text-lg font-bold">{room || "General Channel"}</h1>
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Sidebar: visible on md+ screens, or on mobile if showSidebar is true */}
+        {/* Sidebar: visible on md+ or if showSidebar is true on mobile */}
         <div
-          className={`bg-gray-800 border-r border-gray-700 flex flex-col h-full 
-            ${showSidebar ? "w-64" : "hidden"} md:block md:w-64 absolute md:relative z-20`}
+          className={`
+            bg-gray-800 border-r border-gray-700 flex flex-col h-full 
+            ${showSidebar ? "w-64 block" : "hidden"} md:block md:w-64 absolute md:relative z-20
+          `}
         >
           <div className="p-4 border-b border-gray-700">
             <h1 className="text-xl font-bold truncate">
@@ -134,6 +143,9 @@ const Channel = () => {
 
           <div className="p-3 flex items-center justify-between border-b border-gray-700">
             <h2 className="text-sm font-semibold text-gray-400">MEMBERS</h2>
+            <button className="text-gray-400 hover:text-white">
+              <PlusCircle size={16} />
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -222,9 +234,17 @@ const Channel = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area: full-width on mobile/tablet */}
-          <div className="p-2 md:p-4 border-t border-gray-700 bg-gray-800">
+          {/* Input Area: occupies full width */}
+          <div className="p-4 border-t border-gray-700 bg-gray-800">
             <div className="flex items-center">
+              <div className="flex space-x-2 mr-3">
+                <button className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700">
+                  <Paperclip size={18} />
+                </button>
+                <button className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700">
+                  <Smile size={18} />
+                </button>
+              </div>
               <div className="flex-1 relative">
                 <textarea
                   value={message}
@@ -241,7 +261,7 @@ const Channel = () => {
                   <Send size={18} />
                 </button>
               </div>
-              <button className="ml-2 text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700">
+              <button className="ml-3 text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700">
                 <Mic size={18} />
               </button>
             </div>

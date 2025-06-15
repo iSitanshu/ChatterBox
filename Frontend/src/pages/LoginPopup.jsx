@@ -80,7 +80,6 @@ const LoginPopup = () => {
         token: jwtToken,
       })
       .then((res) => {
-        console.log("User logged in:", res.data);
         handleSubmitviaGoogle({
           username: res.data.user.name,
           email: res.data.user.email,
